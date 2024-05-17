@@ -1,0 +1,8 @@
+= Face Cover Emoji
+
+Example of detecting faces and covering them with an emoji depending on the age of the person.
+
+Important things:
+
+* Multiple models
+* Image manipulation with OpenCV

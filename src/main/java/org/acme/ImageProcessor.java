@@ -6,6 +6,7 @@ import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.modality.cv.output.Rectangle;
 import ai.djl.opencv.OpenCVImageFactory;
 import jakarta.inject.Singleton;
+import java.io.ByteArrayOutputStream;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -114,6 +115,13 @@ public class ImageProcessor {
         int x = (int) (r.getX() * image.getWidth());
         int y = (int) (r.getY() * image.getHeight());
         return new Point(x, y);
+    }
+
+    public byte[] toByteArray(Image img) throws IOException {
+        try(final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+            img.save(byteArrayOutputStream, "png");
+            return byteArrayOutputStream.toByteArray();
+        }
     }
 
     public void store(String name, Image image) throws IOException {

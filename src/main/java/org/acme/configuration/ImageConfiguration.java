@@ -2,6 +2,7 @@ package org.acme.configuration;
 
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
+import ai.djl.opencv.OpenCVImageFactory;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
@@ -14,7 +15,7 @@ public class ImageConfiguration {
 
     @Produces
     public ImageFactory imageFactory() {
-        return ImageFactory.getInstance();
+        return OpenCVImageFactory.getInstance();
     }
 
     @Produces

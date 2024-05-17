@@ -7,24 +7,29 @@ import ai.djl.modality.cv.ImageFactory;
 
 import ai.djl.modality.cv.output.DetectedObjects;
 
-import ai.djl.opencv.OpenCVImageFactory;
 
 import ai.djl.translate.TranslateException;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Consumes;
+
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.nio.file.Files;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.opencv.core.Point;
 
 import java.io.IOException;
 
-import java.nio.file.Paths;
 import java.util.List;
 
-@Path("/hello")
+@Path("/cover")
 public class CoverFaceResource {
 
     @Inject
@@ -47,18 +52,21 @@ public class CoverFaceResource {
     @Named("smile")
     Image smile;
 
-    @GET
-    @Produces(MediaType.TEXT_PLAIN)
-    public String hello() throws TranslateException, IOException {
-        Image finalResult = predict();
-
-        this.imageProcessor.store("final.png", finalResult);
-        return null;
+    @POST
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public byte[] cover(@RestForm("picture") FileUpload picture) throws TranslateException, IOException {
+        final Image image = getImage(picture);
+        Image finalResult = predict(image);
+        return this.imageProcessor.toByteArray(finalResult);
     }
 
-    public Image predict() throws IOException, TranslateException {
-        java.nio.file.Path facePath = Paths.get("src/test/resources/baby.jpg");
-        Image originalImage = OpenCVImageFactory.getInstance().fromFile(facePath);
+    private Image getImage(FileUpload picture) throws IOException {
+        final byte[] content = Files.readAllBytes(picture.uploadedFile());
+        return this.imageFactory.fromInputStream(new ByteArrayInputStream(content));
+    }
+
+    public Image predict(Image originalImage) throws IOException, TranslateException {
 
         DetectedObjects detectedFaces = faceDetectionService.detectFaces(originalImage);
 
@@ -73,9 +81,13 @@ public class CoverFaceResource {
             Point p = this.imageProcessor.translateToPoint(originalImage, detection.getBoundingBox().getBounds());
             Image banner = getBanner(age);
             Image bannerWithCorrectSize = banner.resize(face.getWidth(), face.getHeight(), true);
+
+            // Appends the emoji to one face
+
             finalResult = this.imageProcessor.overlayImage(finalResult, bannerWithCorrectSize, p);
         }
 
+        this.imageProcessor.store("final.png", finalResult);
         return finalResult;
     }
 

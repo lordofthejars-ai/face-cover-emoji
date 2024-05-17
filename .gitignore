@@ -12,6 +12,8 @@ release.properties
 .settings/
 bin/
 
+*/tmp.png
+
 # IntelliJ
 .idea
 *.ipr
